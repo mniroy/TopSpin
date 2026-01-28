@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TopSpin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div id="tabs-bar" class="tabs-container">
+                <!-- Tabs will be injected here -->
+            </div>
+            <div class="nav-controls">
+                <button id="add-app-btn" class="nav-btn" title="Add Custom App">+</button>
+                <button id="back-btn" class="nav-btn" title="Back">←</button>
+                <button id="reload-btn" class="nav-btn" title="Reload">↻</button>
+                <button id="open-external-btn" class="nav-btn" title="Open in Browser">↗</button>
+                <button id="settings-btn" class="nav-btn" title="Settings">⚙</button>
+            </div>
+        </header>
+
+        <main id="webview-container" class="content">
+            <!-- Webviews will be injected here -->
+        </main>
+
+        <!-- Add App Modal -->
+        <div id="add-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-icon" id="cancel-add">✕</button>
+                <h3>Add Custom PWA</h3>
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <label class="settings-label">App Name</label>
+                        <input type="text" id="new-app-name" placeholder="e.g. ChatGPT">
+                    </div>
+                    <div class="settings-item">
+                        <label class="settings-label">URL</label>
+                        <input type="text" id="new-app-url" placeholder="https://...">
+                    </div>
+                </div>
+                <div class="modal-actions-column">
+                    <button id="confirm-add" class="modal-btn primary">Add App</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-icon" id="close-settings">✕</button>
+                <h3>Settings</h3>
+
+                <div class="settings-list">
+
+                    <div class="settings-item">
+                        <label class="settings-label">User Agent / Device Mode</label>
+                        <select id="ua-select">
+                            <option
+                                value="Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1">
+                                iPhone (Legacy iOS)</option>
+                            <option
+                                value="Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1">
+                                iPhone (Latest iOS)</option>
+                            <option
+                                value="Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1">
+                                iPad (Tablet View)</option>
+                            <option
+                                value="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36">
+                                Google Login (Compatible)</option>
+                            <option value="custom">Custom...</option>
+                        </select>
+                        <textarea id="ua-custom-input" placeholder="Enter custom User Agent string" rows="3"
+                            style="display: none; margin-top: 8px;"></textarea>
+                    </div>
+
+                    <div class="settings-item settings-item-row">
+                        <label class="settings-label">Launch at Login</label>
+                        <input type="checkbox" id="login-checkbox">
+                    </div>
+                </div>
+
+                <div class="modal-actions-column">
+                    <button id="save-settings" class="modal-btn primary">Save & Reload</button>
+                    <button id="quit-app-btn" class="modal-btn danger">Quit TopSpin</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+
+</html>
