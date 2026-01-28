@@ -5,33 +5,28 @@ let tray = null;
 let window = null;
 let psbId = null;
 
-// Disable background throttling and occlusion tracking to keep music playing
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 app.commandLine.appendSwitch('disable-features', 'OcclusionTracker,CalculateNativeWindowOcclusion');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
-app.commandLine.appendSwitch('disable-blink-features', 'AutomationControlled'); // CRITICAL: Hides "controlled by automation" flag
+app.commandLine.appendSwitch('disable-blink-features', 'AutomationControlled');
 
-// Don't show the app in the dock
 if (process.platform === 'darwin') {
   app.dock.hide();
 }
 
-// Prevent the app from being napped/suspended by macOS
 app.on('ready', () => {
   psbId = powerSaveBlocker.start('prevent-app-suspension');
   createTray();
   createWindow();
 });
 
-// Settings / Utilities
 ipcMain.on('quit-app', () => {
   app.quit();
 });
 
 ipcMain.on('set-login-item', (event, value) => {
-  // Only works when app is packaged and installed
   if (app.isPackaged) {
     try {
       app.setLoginItemSettings({
@@ -60,14 +55,10 @@ const createTray = () => {
   const fs = require('fs');
 
   try {
-    // Check if icon exists, if not use a generic one or just a placeholder string
     if (fs.existsSync(iconPath)) {
       tray = new Tray(iconPath);
     } else {
-      // Create a temporary tray even without icon to avoid total failure
-      // On macOS, we can't easily create an empty tray, but we can log it.
       console.warn('Icon not found at:', iconPath);
-      // We still try to create it, Electron might show a default or empty space
       tray = new Tray(iconPath);
     }
 
@@ -96,21 +87,18 @@ const createWindow = () => {
       webviewTag: true,
       backgroundThrottling: false,
       disableBlinkFeatures: 'Auxclick',
-      webSecurity: false, // Sometimes required for specialized login flows
+      webSecurity: false,
       allowRunningInsecureContent: true
     }
   });
 
-  // STRIP IDENTITY: Remove headers that identify this as "TopSpin/Electron"
   const { session } = window.webContents;
 
   window.loadFile('index.html');
 
-  // Allow the app to float over Full Screen apps
   window.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   window.setAlwaysOnTop(true, 'floating');
 
-  // CRITICAL: Hide via opacity (not hide()) to keep audio playing
   window.on('blur', () => {
     if (!window.webContents.isDevToolsOpened()) {
       window.setOpacity(0);
@@ -119,7 +107,6 @@ const createWindow = () => {
   });
 };
 
-// DEDICATED LOGIN WINDOW (Enhanced Mobile Stealth)
 ipcMain.handle('google-login', () => {
   return new Promise((resolve) => {
     const loginWin = new BrowserWindow({
@@ -175,7 +162,6 @@ const getWindowPosition = () => {
 };
 
 const toggleWindow = () => {
-  // Use opacity to "hide" instead of actual hide, so audio keeps playing
   if (window.getOpacity() === 1) {
     window.setOpacity(0);
     window.setIgnoreMouseEvents(true);
@@ -184,12 +170,11 @@ const toggleWindow = () => {
     window.setPosition(x, y, false);
     window.setOpacity(1);
     window.setIgnoreMouseEvents(false);
-    window.show(); // Ensure it's in front
+    window.show();
     window.focus();
   }
 };
 
-// Quit when all windows are closed.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();

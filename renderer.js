@@ -8,19 +8,14 @@ const backBtn = document.getElementById('back-btn');
 const reloadBtn = document.getElementById('reload-btn');
 const openExternalBtn = document.getElementById('open-external-btn');
 
-// App Modals
 const addModal = document.getElementById('add-modal');
 const settingsModal = document.getElementById('settings-modal');
 
-
-
-// New App Elements
 const newAppNameInput = document.getElementById('new-app-name');
 const newAppUrlInput = document.getElementById('new-app-url');
 const confirmAddBtn = document.getElementById('confirm-add');
 const cancelAddBtn = document.getElementById('cancel-add');
 
-// Settings Elements
 const uaSelect = document.getElementById('ua-select');
 const uaCustomInput = document.getElementById('ua-custom-input');
 const loginCheckbox = document.getElementById('login-checkbox');
@@ -47,13 +42,11 @@ const renderTabs = () => {
     webviewContainer.innerHTML = '';
 
     apps.forEach((app, index) => {
-        // Create Tab Button
         const btn = document.createElement('button');
         btn.className = `tab-btn ${index === activeAppIndex ? 'active' : ''}`;
         btn.textContent = app.name;
         btn.addEventListener('click', () => switchTab(index));
 
-        // Add context menu to delete (right click)
         btn.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             if (confirm(`Remove ${app.name}?`)) {
@@ -63,7 +56,6 @@ const renderTabs = () => {
 
         tabsBar.appendChild(btn);
 
-        // Create Webview
         const webview = document.createElement('webview');
         webview.className = `pwa-webview ${index === activeAppIndex ? 'active' : ''}`;
         webview.src = app.url;
@@ -75,20 +67,11 @@ const renderTabs = () => {
 
         handleCrashes(webview);
 
-        // FAKE VISIBILITY: This prevents YT Music from pausing when the window is hidden
-        // ... (previous visibility logic preserved via 'dom-ready') ...
-
-        // INTERCEPT GOOGLE LOGIN: The "Sign in" button in the webview will now trigger our secure window
         const handleLoginNavigation = async (url, event) => {
             if (url.includes('accounts.google.com') || url.includes('google.com/signin')) {
-                // Determine if we should stop navigation or prevent new window
                 if (event && event.preventDefault) event.preventDefault();
-                webview.stop(); // Stop the "Insecure Browser" page from loading
-
-                // Open the secure login window and wait for user to close it
+                webview.stop();
                 await ipcRenderer.invoke('google-login');
-
-                // Reload the page to refresh the session
                 webview.reload();
             }
         };
@@ -99,22 +82,17 @@ const renderTabs = () => {
         webview.addEventListener('dom-ready', () => {
             const currentUrl = webview.getURL();
 
-            // STRICT SAFETY: Do absolutely nothing on Google Login pages to prevent "Secure Browser" errors
             if (currentUrl.includes('accounts.google.com') || currentUrl.includes('google.com/signin')) {
                 return;
             }
 
-            // Only apply visibility fix on the actual app pages (like YouTube Music or Gemini)
             webview.executeJavaScript(`
                 try {
                     Object.defineProperty(document, 'visibilityState', { value: 'visible', writable: false });
                     Object.defineProperty(document, 'hidden', { value: false, writable: false });
-                    
-                    // Mock Focus: Tricks app into thinking it's always the active window
                     Object.defineProperty(document, 'hasFocus', { value: () => true, writable: false });
                     window.addEventListener('blur', (e) => e.stopImmediatePropagation(), true);
                     window.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);
-
                     window.dispatchEvent(new Event('visibilitychange'));
                     window.dispatchEvent(new Event('focus'));
                 } catch (e) {}
@@ -133,7 +111,7 @@ const switchTab = (index) => {
 };
 
 const removeApp = (index) => {
-    if (apps.length <= 1) return alert("You must HAVE at least one app.");
+    if (apps.length <= 1) return alert("You must have at least one app.");
     apps.splice(index, 1);
     if (activeAppIndex >= apps.length) activeAppIndex = apps.length - 1;
     saveApps();
@@ -147,12 +125,10 @@ const handleCrashes = (webview) => {
     });
 };
 
-// Modals Control
 addAppBtn.addEventListener('click', () => addModal.classList.add('active'));
 cancelAddBtn.addEventListener('click', () => addModal.classList.remove('active'));
 
 settingsBtn.addEventListener('click', async () => {
-    // Determine which option to select
     let matchedOption = false;
     for (const option of uaSelect.options) {
         if (option.value === currentUserAgent) {
@@ -174,8 +150,6 @@ settingsBtn.addEventListener('click', async () => {
     settingsModal.classList.add('active');
 });
 
-
-
 uaSelect.addEventListener('change', () => {
     if (uaSelect.value === 'custom') {
         uaCustomInput.style.display = 'block';
@@ -187,7 +161,6 @@ uaSelect.addEventListener('change', () => {
 
 closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('active'));
 
-// Action buttons
 confirmAddBtn.addEventListener('click', () => {
     const name = newAppNameInput.value.trim();
     let url = newAppUrlInput.value.trim();
@@ -219,7 +192,6 @@ saveSettingsBtn.addEventListener('click', () => {
 
     ipcRenderer.send('set-login-item', loginCheckbox.checked);
 
-    // Reload UI to apply new UA to all webviews
     renderTabs();
     settingsModal.classList.remove('active');
 });
@@ -228,7 +200,6 @@ quitAppBtn.addEventListener('click', () => {
     ipcRenderer.send('quit-app');
 });
 
-// Controls
 backBtn.addEventListener('click', () => {
     const activeWebview = document.querySelector('.pwa-webview.active');
     if (activeWebview && activeWebview.canGoBack()) {
@@ -249,5 +220,4 @@ openExternalBtn.addEventListener('click', () => {
     }
 });
 
-// Initial Render
 renderTabs();
