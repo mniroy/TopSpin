@@ -67,17 +67,23 @@ const renderTabs = () => {
 
         handleCrashes(webview);
 
-        const handleLoginNavigation = async (url, event) => {
+        const handleNavigation = async (url, event, isNewWindow) => {
             if (url.includes('accounts.google.com') || url.includes('google.com/signin')) {
                 if (event && event.preventDefault) event.preventDefault();
                 webview.stop();
                 await ipcRenderer.invoke('google-login');
                 webview.reload();
+                return;
+            }
+
+            if (isNewWindow) {
+                if (event && event.preventDefault) event.preventDefault();
+                shell.openExternal(url);
             }
         };
 
-        webview.addEventListener('will-navigate', (e) => handleLoginNavigation(e.url, e));
-        webview.addEventListener('new-window', (e) => handleLoginNavigation(e.url, e));
+        webview.addEventListener('will-navigate', (e) => handleNavigation(e.url, e, false));
+        webview.addEventListener('new-window', (e) => handleNavigation(e.url, e, true));
 
         webview.addEventListener('dom-ready', () => {
             const currentUrl = webview.getURL();
@@ -95,6 +101,21 @@ const renderTabs = () => {
                     window.addEventListener('visibilitychange', (e) => e.stopImmediatePropagation(), true);
                     window.dispatchEvent(new Event('visibilitychange'));
                     window.dispatchEvent(new Event('focus'));
+
+                    // Enter to Send, Shift+Enter for Newline
+                    window.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                            const target = e.target;
+                            if (target.tagName === 'TEXTAREA' || target.isContentEditable) {
+                                const sendBtn = document.querySelector('button[aria-label*="Send"], button[data-testid="send-button"], button[aria-label="Submit"]');
+                                if (sendBtn && !sendBtn.disabled) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    sendBtn.click();
+                                }
+                            }
+                        }
+                    }, true);
                 } catch (e) {}
             `).catch(() => { });
         });
