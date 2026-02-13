@@ -107,11 +107,57 @@ const renderTabs = () => {
                         if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                             const target = e.target;
                             if (target.tagName === 'TEXTAREA' || target.isContentEditable) {
-                                const sendBtn = document.querySelector('button[aria-label*="Send"], button[data-testid="send-button"], button[aria-label="Submit"]');
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+
+                                const selectors = [
+                                    'button[aria-label*="Send" i]',
+                                    'button[aria-label*="send" i]',
+                                    'button[aria-label*="Submit" i]',
+                                    'button[data-testid="send-button"]',
+                                    'button[data-testid*="send"]',
+                                    'button.send-button',
+                                    'button[class*="send"]'
+                                ];
+
+                                let sendBtn = null;
+                                for (const selector of selectors) {
+                                    sendBtn = document.querySelector(selector);
+                                    if (sendBtn && !sendBtn.disabled && sendBtn.offsetParent !== null) break;
+                                }
+
+                                // Fallback: try to find a button with a 'send' icon (common in Material Design)
+                                if (!sendBtn) {
+                                    const icons = Array.from(document.querySelectorAll('mat-icon, i, span.material-icons, span.material-symbols-outlined'));
+                                    const sendIcon = icons.find(icon => 
+                                        icon.textContent.trim().toLowerCase() === 'send' || 
+                                        icon.textContent.trim().toLowerCase() === 'arrow_upward'
+                                    );
+                                    if (sendIcon) {
+                                        sendBtn = sendIcon.closest('button');
+                                    }
+                                }
+                                
+                                // Fallback: look for the sibling button in the same container
+                                if (!sendBtn && target.form) {
+                                     sendBtn = target.form.querySelector('button[type="submit"]');
+                                }
+
                                 if (sendBtn && !sendBtn.disabled) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
                                     sendBtn.click();
+                                    // Some frameworks need a dispatched event
+                                    sendBtn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                                    sendBtn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+                                } else {
+                                    // If no button found, we might want to let the event propagate so the user at least gets a newline
+                                    // but the requirement is "enter is send".
+                                    // If we can't find the button, we can't send.
+                                    // We'll retry finding the button after a microtask, sometimes state updates are slow.
+                                    setTimeout(() => {
+                                        const retryBtn = document.querySelector('button[aria-label*="Send" i]');
+                                        if (retryBtn) retryBtn.click();
+                                    }, 50);
                                 }
                             }
                         }
