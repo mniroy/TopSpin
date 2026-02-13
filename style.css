@@ -102,6 +102,19 @@ body {
     opacity: 0.7;
 }
 
+.nav-btn:disabled {
+    opacity: 0.3;
+    pointer-events: none;
+    cursor: default;
+}
+
+.divider {
+    width: 1px;
+    height: 16px;
+    background: #333;
+    margin: 0 4px;
+}
+
 .content {
     flex-grow: 1;
     position: relative;

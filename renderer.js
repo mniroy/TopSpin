@@ -63,6 +63,9 @@ const renderTabs = () => {
 
         tabsBar.appendChild(btn);
 
+        moveLeftBtn.disabled = activeAppIndex === 0;
+        moveRightBtn.disabled = activeAppIndex >= apps.length - 1;
+
         const webview = document.createElement('webview');
         webview.className = `pwa-webview ${index === activeAppIndex ? 'active' : ''}`;
         webview.src = app.url;
@@ -120,7 +123,11 @@ const switchTab = (index) => {
     const webviews = document.querySelectorAll('.pwa-webview');
 
     tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
+    tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
     webviews.forEach((wv, i) => wv.classList.toggle('active', i === index));
+
+    moveLeftBtn.disabled = activeAppIndex === 0;
+    moveRightBtn.disabled = activeAppIndex >= apps.length - 1;
 };
 
 const removeApp = (index) => {
@@ -138,8 +145,33 @@ const handleCrashes = (webview) => {
     });
 };
 
+const moveLeftBtn = document.getElementById('move-left-btn');
+const moveRightBtn = document.getElementById('move-right-btn');
+
 addAppBtn.addEventListener('click', () => addModal.classList.add('active'));
 cancelAddBtn.addEventListener('click', () => addModal.classList.remove('active'));
+
+moveLeftBtn.addEventListener('click', () => {
+    if (activeAppIndex > 0) {
+        const temp = apps[activeAppIndex];
+        apps[activeAppIndex] = apps[activeAppIndex - 1];
+        apps[activeAppIndex - 1] = temp;
+        activeAppIndex--;
+        saveApps();
+        renderTabs();
+    }
+});
+
+moveRightBtn.addEventListener('click', () => {
+    if (activeAppIndex < apps.length - 1) {
+        const temp = apps[activeAppIndex];
+        apps[activeAppIndex] = apps[activeAppIndex + 1];
+        apps[activeAppIndex + 1] = temp;
+        activeAppIndex++;
+        saveApps();
+        renderTabs();
+    }
+});
 
 settingsBtn.addEventListener('click', async () => {
     let matchedOption = false;
